@@ -13,6 +13,34 @@ func TestValidateValidModel(t *testing.T) {
 	}
 }
 
+func TestValidateExceptFirstComponent(t *testing.T) {
+	m := mustParse(t, validYAML)
+	m.Rules[0].ExceptComponents = []string{m.Components[0].ID}
+	if got := Validate(m, "model.yaml"); len(got) != 0 {
+		t.Errorf("Validate() = %v, want no findings", got)
+	}
+}
+
+func TestOverlap(t *testing.T) {
+	tests := []struct {
+		a, b string
+		want bool
+	}{
+		{"example.com/a", "example.com/a", true},
+		{"example.com/a", "example.com/b", false},
+		{"example.com/a/...", "example.com/a/b", true},
+		{"example.com/a/b", "example.com/a/...", true},
+		{"example.com/a/...", "example.com/a", true},
+		{"example.com/a/b/...", "example.com/a", false},
+		{"example.com/a/...", "example.com/ab", false},
+	}
+	for _, tc := range tests {
+		if got := overlap(tc.a, tc.b); got != tc.want {
+			t.Errorf("overlap(%q, %q) = %t, want %t", tc.a, tc.b, got, tc.want)
+		}
+	}
+}
+
 func TestValidateDefects(t *testing.T) {
 	tests := []struct {
 		name    string

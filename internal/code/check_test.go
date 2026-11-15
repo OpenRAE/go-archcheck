@@ -154,6 +154,15 @@ func TestCheckWithoutComponents(t *testing.T) {
 	}
 }
 
+func TestCheckPackageWithoutFilesOutsideLayers(t *testing.T) {
+	m := testModel()
+	m.Components = nil
+	g := Graph{Module: shop, Packages: []Package{{Path: shop + "/tools"}}}
+	if got := Check(m, "model.yaml", g); len(got) != 0 {
+		t.Errorf("Check() = %v, want no findings", got)
+	}
+}
+
 func hasFinding(findings []finding.Finding, location, rule, message string) bool {
 	return slices.ContainsFunc(findings, func(f finding.Finding) bool {
 		return f.Location == location && f.Rule == rule && strings.Contains(f.Message, message)

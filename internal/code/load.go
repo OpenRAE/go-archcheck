@@ -108,10 +108,7 @@ func modulePath(dir string) (string, error) {
 		return "", fmt.Errorf("open the module directory: %w", err)
 	}
 	content, err := root.ReadFile("go.mod")
-	if closeErr := root.Close(); err == nil && closeErr != nil {
-		err = closeErr
-	}
-	if err != nil {
+	if err = errors.Join(err, root.Close()); err != nil {
 		return "", fmt.Errorf("read the go.mod file: %w", err)
 	}
 	mod := modfile.ModulePath(content)

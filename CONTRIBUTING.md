@@ -18,7 +18,7 @@ Contributions are welcome when they keep the checker generic, tested and documen
 
 ## Check a change
 
-`make ci-check` runs every check that CI runs: lint, security, tests, fuzzing, regression proof, the self-check, prose and the Ground Control checks.
+`make ci-check` runs every check that CI runs: lint, security, tests, mutation testing, fuzzing, regression proof, the self-check, prose and the Ground Control checks.
 `make hygiene` runs the file hygiene, workflow and secret hooks on every file.
 Run `make help` for the individual checks.
 
@@ -26,6 +26,7 @@ Run `make help` for the individual checks.
 
 - Write Go in the Google Go style. golangci-lint and the OpenRÆ `raesvet` analyzers enforce it.
 - Keep statement coverage at or above 90% for each package.
+- Keep the mutation test efficacy and the mutant coverage at or above 90%. `make mutation` checks them with Gremlins.
 - Test the command contract with the testscript files in `cmd/archcheck/testdata/script`, and give each new parser a fuzz target.
 - Name a regression test `TestRegression...` in a `*_regression_test.go` file. It must fail on the base revision.
 - Add a design record in `architecture/designs` for each structural change of `architecture/model.yaml`.
