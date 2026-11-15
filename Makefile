@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help tools hygiene lint security test fuzz regression arch prose gc ci-check
+.PHONY: help tools hygiene lint security test mutation fuzz regression arch prose gc ci-check
 
 MISE ?= mise
 GO = $(MISE) exec -- go
@@ -8,9 +8,10 @@ RAESVET = .cache/bin/raesvet
 GOVULNCHECK = .cache/bin/govulncheck
 COVERAGE = .cache/bin/go-test-coverage
 REGRESSIONTEST = .cache/bin/regressiontest
+GREMLINS = .cache/bin/gremlins
 
 help:
-	@echo 'Checks: make lint, make security, make test, make fuzz, make regression, make arch, make prose, make gc, make hygiene'
+	@echo 'Checks: make lint, make security, make test, make mutation, make fuzz, make regression, make arch, make prose, make gc, make hygiene'
 	@echo 'All checks, as CI runs them: make ci-check'
 
 tools:
@@ -37,6 +38,9 @@ $(COVERAGE): tools/go.mod tools/go.sum
 $(REGRESSIONTEST): tools/go.mod tools/go.sum
 	$(GO) build -modfile tools/go.mod -o $@ github.com/OpenRAE/rae/implementations/tooling/go/cmd/regressiontest
 
+$(GREMLINS): tools/go.mod tools/go.sum
+	$(GO) build -modfile tools/go.mod -o $@ github.com/OpenRAE/go-rae-gremlins/cmd/gremlins
+
 # The lint gate: golangci-lint, go vet, the OpenRÆ raesvet analyzers, and tidy and fix checks.
 lint: $(GOLANGCI) $(RAESVET)
 	$(GO) mod tidy -diff
@@ -60,6 +64,10 @@ test: $(COVERAGE)
 	mkdir -p .cache
 	$(GO) test -race -shuffle=on -covermode=atomic -coverprofile=.cache/coverage.out ./...
 	$(COVERAGE) --config .testcoverage.yml
+
+# Mutation testing fails when the test efficacy or the mutant coverage is below 90%.
+mutation: $(GREMLINS)
+	$(MISE) exec -- $(CURDIR)/$(GREMLINS) unleash --threshold-efficacy 90 --threshold-mcover 90 --output-statuses lct
 
 # Each fuzz target of the parsers runs for a short time. A failing input lands in testdata/fuzz,
 # and the fix commits it as a regression seed.
@@ -92,4 +100,4 @@ gc:
 	$(MISE) exec -- uv run --locked --no-build coverage run --source=scripts -m unittest discover -s tests
 	$(MISE) exec -- uv run --locked --no-build coverage xml -o .cache/python-coverage.xml
 
-ci-check: lint security test fuzz regression arch prose gc
+ci-check: lint security test mutation fuzz regression arch prose gc

@@ -1,10 +1,15 @@
 package code
 
 import (
+	"fmt"
+	"os"
+	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"golang.org/x/tools/go/packages"
 )
 
 func TestLoadFixture(t *testing.T) {
@@ -51,5 +56,57 @@ func TestLoadFixture(t *testing.T) {
 func TestLoadErrors(t *testing.T) {
 	if _, err := Load("testdata/missing"); err == nil {
 		t.Errorf("Load() of a directory with no go.mod error = nil, want an error")
+	}
+}
+
+func TestLoadPackageError(t *testing.T) {
+	if testing.Short() {
+		t.Skip("loads packages with the go command")
+	}
+	dir := t.TempDir()
+	files := map[string]string{
+		"go.mod":    "module example.com/broken\n\ngo 1.27.0\n",
+		"broken.go": "package broken\n\nfunc f() {\n",
+	}
+	for name, content := range files {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := Load(dir); err == nil || !strings.Contains(err.Error(), "broken.go") {
+		t.Errorf("Load() of a package with a syntax error = %v, want an error for broken.go", err)
+	}
+}
+
+func TestPackageErrors(t *testing.T) {
+	var many []packages.Error
+	var manyMessages []string
+	for i := range maxLoadErrors + 2 {
+		many = append(many, packages.Error{Msg: fmt.Sprintf("error %d", i)})
+		manyMessages = append(manyMessages, fmt.Sprintf("-: error %d", i))
+	}
+	noMatch := []packages.Error{{Msg: "matched no packages"}}
+	tests := []struct {
+		name string
+		pkgs []*packages.Package
+		want []string
+	}{
+		{"no package for the pattern", []*packages.Package{{Errors: noMatch}}, nil},
+		{"go files", []*packages.Package{{GoFiles: []string{"a.go"}, Errors: noMatch}}, []string{"-: matched no packages"}},
+		{"compiled go files", []*packages.Package{{CompiledGoFiles: []string{"a.go"}, Errors: noMatch}}, []string{"-: matched no packages"}},
+		{"other error", []*packages.Package{{Errors: []packages.Error{{Msg: "bad import"}}}}, []string{"-: bad import"}},
+		{"at the bound", []*packages.Package{{Errors: many[:maxLoadErrors]}}, manyMessages[:maxLoadErrors]},
+		{"over the bound", []*packages.Package{{Errors: many}}, append(slices.Clone(manyMessages[:maxLoadErrors]), "and 2 more errors")},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var got []string
+			if err := packageErrors(tc.pkgs); err != nil {
+				got = strings.Split(err.Error(), "\n")
+			}
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("packageErrors() mismatch (-want +got):\n%s", diff)
+			}
+		})
 	}
 }

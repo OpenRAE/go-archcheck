@@ -5,6 +5,7 @@ module github.com/OpenRAE/go-rae-archcheck/tools
 go 1.27.3
 
 tool (
+	github.com/OpenRAE/go-rae-gremlins/cmd/gremlins
 	github.com/OpenRAE/rae/implementations/tooling/go/cmd/raesvet
 	github.com/OpenRAE/rae/implementations/tooling/go/cmd/regressiontest
 	github.com/golangci/golangci-lint/v2/cmd/golangci-lint
@@ -31,9 +32,11 @@ require (
 	github.com/BurntSushi/toml v1.6.0 // indirect
 	github.com/ClickHouse/clickhouse-go-linter v1.2.1 // indirect
 	github.com/Djarvur/go-err113 v0.1.1 // indirect
+	github.com/MakeNowJust/heredoc v1.0.0 // indirect
 	github.com/Masterminds/semver/v3 v3.5.0 // indirect
 	github.com/MirrexOne/unqueryvet v1.5.4 // indirect
 	github.com/OpenPeeDeeP/depguard/v2 v2.2.1 // indirect
+	github.com/OpenRAE/go-rae-gremlins v0.7.0 // indirect
 	github.com/OpenRAE/rae/implementations/tooling/go v0.0.0-20261101073621-4a6123c2d364 // indirect
 	github.com/alecthomas/chroma/v2 v2.27.0 // indirect
 	github.com/alecthomas/go-check-sumtype v0.5.1-0.20260828200218-ae6904d28606 // indirect
@@ -58,9 +61,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.20.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.114.0 // indirect
 	github.com/aws/smithy-go v1.28.1 // indirect
+	github.com/aymanbagabas/go-udiff v0.4.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bkielbasa/cyclop v1.2.3 // indirect
 	github.com/blizzy78/varnamelen v0.8.0 // indirect
+	github.com/bluekeyes/go-gitdiff v0.8.1 // indirect
 	github.com/bombsimon/wsl/v4 v4.7.0 // indirect
 	github.com/bombsimon/wsl/v5 v5.9.0 // indirect
 	github.com/breml/bidichk v0.3.4 // indirect
@@ -128,6 +133,7 @@ require (
 	github.com/gostaticanalysis/comment v1.5.0 // indirect
 	github.com/gostaticanalysis/forcetypeassert v0.2.0 // indirect
 	github.com/gostaticanalysis/nilerr v0.1.2 // indirect
+	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b // indirect
 	github.com/hashicorp/go-immutable-radix/v2 v2.1.0 // indirect
 	github.com/hashicorp/go-version v1.9.0 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
