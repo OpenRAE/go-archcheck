@@ -1,0 +1,6 @@
+# Trivy has no class for BlueOak-1.0.0, so it reports the license as unknown.
+# BlueOak-1.0.0 is a permissive, OSI-approved license.
+# The other licenses in this repository keep their default classes.
+license:
+  permissive:
+    - BlueOak-1.0.0
