@@ -24,6 +24,7 @@ PRODUCERS = {
 # The code scanning app produces the CodeQL context, and the GitGuardian App produces
 # the GitGuardian context on main. No workflow in this repository produces them there.
 MAIN_CHECKS = (set(PRODUCERS) - {"maintainer-gate"}) | {"CodeQL"}
+ALWAYS = "always()"
 # A job condition must be true on each merge group, so the queue always gets a real result.
 # The SonarCloud job skips only pull requests from other repositories, which get no token.
 JOB_CONDITIONS = {
@@ -79,8 +80,8 @@ def check_producers(root: Path, contexts: set[str], branch: str) -> None:
                 )
         job = document["jobs"][job_id]
         assert job.get("name", job_id) == context, f"Producer must report {context}"
-        allowed = {"always()", JOB_CONDITIONS.get(context, "always()")}
-        assert job.get("if", "always()") in allowed, f"{context} must not skip its check"
+        allowed = {ALWAYS, JOB_CONDITIONS.get(context, ALWAYS)}
+        assert job.get("if", ALWAYS) in allowed, f"{context} must not skip its check"
         assert not job.get("continue-on-error"), f"{context} must block on failure"
         assert not any(step.get("continue-on-error") for step in job["steps"]), (
             f"{context} steps must block on failure"
