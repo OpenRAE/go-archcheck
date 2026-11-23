@@ -23,7 +23,7 @@ func TestCheckValid(t *testing.T) {
 		"d/README.txt":      &fstest.MapFile{Data: []byte("not a record")},
 		"d/sub/0003-old.md": record(3, 5, "Nested"),
 	}
-	got, err := Check(fsys, "d")
+	got, err := Check(fsys, "d", nil)
 	if err != nil {
 		t.Fatalf("Check() error = %v", err)
 	}
@@ -43,7 +43,7 @@ func TestCheckDefects(t *testing.T) {
 		"d/0007-unclosed.md": &fstest.MapFile{Data: []byte("---\ndesign: 7\n")},
 		"d/0008-unknown.md":  &fstest.MapFile{Data: []byte("---\ndesign: 8\nissue: 1\ntitle: T\nextra: x\n---\n")},
 	}
-	got, err := Check(fsys, "d")
+	got, err := Check(fsys, "d", nil)
 	if err != nil {
 		t.Fatalf("Check() error = %v", err)
 	}

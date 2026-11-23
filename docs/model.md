@@ -63,14 +63,50 @@ Every change to the model other than its descriptive text is structural.
 Descriptive text is the names, descriptions, technologies, reasons and fix messages.
 With `-base-model` and `-base-designs`, the checker reports a structural change that adds no new design record.
 
+## Design-number reservations
+
+A reservation keeps a design number for one issue, so two branches cannot add records with the same number.
+A reservation is an annotated tag `design/NNNN` in the GitHub repository, with the message `issue: N`.
+
+`archcheck reserve` reserves the next free number for an issue and prints it as four digits.
+
+The next free number is one more than the largest number of the records in the design directory and of the `design/NNNN` tags.
+GitHub rejects a tag that exists, so each number goes to one caller, and the command then tries the next number.
+
+The command does not change or delete a tag that exists.
+When GitHub sends no response to a tag request, the command stops and reports that the outcome is unknown.
+
+The tag marks the latest commit of the default branch.
+`GH_TOKEN` must hold a token with write access to the contents of the repository.
+
+The record check of reservations is optional.
+`-reservations` names a file that lists the reservation tags, as these commands write it:
+
+```sh
+git fetch origin 'refs/tags/design/*:refs/tags/design/*'
+git for-each-ref --format='%(refname)%09%(objecttype)%09%(contents:subject)' refs/tags/design/ > reservations.txt
+```
+
+With `-reservations`, the checker reports these records:
+
+- A record whose number has no annotated `design/NNNN` tag.
+- A record whose issue is not the issue in the message of its tag.
+
+A malformed line or a duplicate tag in the file is an error.
+Without `-reservations`, the record checks do not change.
+A repository with records needs a tag for each record before it uses the check.
+
 ## Command
 
 ```sh
-archcheck [-model path] [-designs dir] [-base-model path -base-designs path] [-code=false]
+archcheck [-model path] [-designs dir] [-base-model path -base-designs path] [-reservations path] [-code=false]
+archcheck reserve -repo owner/name -issue N [-designs dir]
 ```
 
 The command runs from the module root.
 `-base-designs` names a file that lists the record names of the base revision, as `git ls-tree --name-only` prints them.
+`-reservations` names the file of reservation tags.
 `-code=false` checks only the model and the records.
 
 The exit status is 0 with no findings, 1 with findings or an error, and 2 for a usage error.
+`archcheck reserve` has the exit status 0 when it prints a number, 1 for an error, and 2 for a usage error.

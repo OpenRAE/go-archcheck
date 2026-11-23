@@ -22,6 +22,7 @@ Reports are most useful for these parts of the checker:
 - the parsing and validation of models and design records
 - the loading of Go packages
 - the command, its output and its exit statuses
+- the reservation command, its GitHub token and its GitHub API calls
 - the repository automation that handles untrusted input
 
 ## What to expect

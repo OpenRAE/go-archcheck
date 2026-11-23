@@ -10,7 +10,6 @@ import (
 	"path"
 	"regexp"
 	"slices"
-	"strconv"
 	"strings"
 
 	"go.yaml.in/yaml/v3"
@@ -30,10 +29,18 @@ type frontMatter struct {
 	Title  string `yaml:"title"`
 }
 
+// Fixes of the record findings.
+const (
+	recordFix      = "Name the record NNNN-slug.md, and start it with front matter that states its design number, its issue and its title."
+	reservationFix = "Reserve the design number for the issue of the record with archcheck reserve, and fetch the reservation tags before the check."
+)
+
 // Check returns the defects of the design records in dir of fsys. Each
 // record is a Markdown file that starts with front matter between two "---"
-// lines, with its number, its issue and its title.
-func Check(fsys fs.FS, dir string) ([]finding.Finding, error) {
+// lines, with its number, its issue and its title. With reservations that
+// are not nil, each record with valid front matter also needs a reservation
+// of its number for its issue; ParseReservations reads them.
+func Check(fsys fs.FS, dir string, reservations map[int]int) ([]finding.Finding, error) {
 	names, err := Names(fsys, dir)
 	if err != nil {
 		return nil, err
@@ -42,17 +49,17 @@ func Check(fsys fs.FS, dir string) ([]finding.Finding, error) {
 	numbers := map[int]string{}
 	for _, name := range names {
 		location := path.Join(dir, name)
-		add := func(message string) {
+		add := func(message, fix string) {
 			findings = append(findings, finding.Finding{
 				Location: location,
 				Rule:     finding.Record,
 				Message:  message,
-				Fix:      "Name the record NNNN-slug.md, and start it with front matter that states its design number, its issue and its title.",
+				Fix:      fix,
 			})
 		}
-		match := namePattern.FindStringSubmatch(name)
-		if match == nil {
-			add("the file name is not NNNN-slug.md")
+		number, ok := Number(name)
+		if !ok {
+			add("the file name is not NNNN-slug.md", recordFix)
 			continue
 		}
 		content, err := fs.ReadFile(fsys, location)
@@ -60,17 +67,20 @@ func Check(fsys fs.FS, dir string) ([]finding.Finding, error) {
 			return nil, err
 		}
 		meta, ok := parseFrontMatter(content)
-		number, _ := strconv.Atoi(match[1])
 		switch {
 		case !ok:
-			add("the record has no valid front matter")
+			add("the record has no valid front matter", recordFix)
 		case meta.Design != number:
-			add(fmt.Sprintf("the front matter states design %d, but the file name states %d", meta.Design, number))
+			add(fmt.Sprintf("the front matter states design %d, but the file name states %d", meta.Design, number), recordFix)
 		case meta.Issue <= 0 || strings.TrimSpace(meta.Title) == "":
-			add("the front matter needs an issue number and a title")
+			add("the front matter needs an issue number and a title", recordFix)
+		default:
+			if defect := reservationDefect(reservations, number, meta.Issue); defect != "" {
+				add(defect, reservationFix)
+			}
 		}
 		if prior, used := numbers[number]; used {
-			add(fmt.Sprintf("design number %d is also used by %s", number, prior))
+			add(fmt.Sprintf("design number %d is also used by %s", number, prior), recordFix)
 		}
 		numbers[number] = name
 	}

@@ -43,7 +43,7 @@ const fixtureRecord = "---\ndesign: 1\nissue: 1\ntitle: Start\n---\n"
 func runCommand(t *testing.T, args []string, fsys fstest.MapFS) (status int, stdout, stderr string) {
 	t.Helper()
 	var out, errOut bytes.Buffer
-	status = run(context.Background(), args, fsys, ".", &out, &errOut)
+	status = run(context.Background(), args, fsys, ".", testEnv("http://unused.invalid"), &out, &errOut)
 	return status, out.String(), errOut.String()
 }
 
@@ -148,13 +148,46 @@ func TestRunBaseErrors(t *testing.T) {
 	}
 }
 
+func TestRunReservations(t *testing.T) {
+	dir := t.TempDir()
+	list := filepath.Join(dir, "reservations.txt")
+	fsys := fstest.MapFS{
+		"architecture/model.yaml":            {Data: []byte(fixtureModel)},
+		"architecture/designs/0001-start.md": {Data: []byte(fixtureRecord)},
+	}
+	args := []string{"-code=false", "-reservations", list}
+	tests := []struct {
+		name, listing, stderr string
+		status                int
+	}{
+		{name: "reserved", listing: "refs/tags/design/0001\ttag\tissue: 1\n", status: 0},
+		{name: "empty", listing: "", status: 1, stderr: "design number 1 has no reservation tag design/0001"},
+		{name: "other issue", listing: "refs/tags/design/0001\ttag\tissue: 2\n", status: 1, stderr: "the reservation tag design/0001 names issue 2, but the front matter states issue 1"},
+		{name: "lightweight", listing: "refs/tags/design/0001\tcommit\tissue: 1\n", status: 1, stderr: "has no reservation tag"},
+		{name: "malformed", listing: "refs/tags/design/0001 tag\n", status: 1, stderr: "archcheck: " + list + ": line 1: want the reference name"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			writeFile(t, list, tc.listing)
+			status, _, stderr := runCommand(t, args, fsys)
+			if status != tc.status || !strings.Contains(stderr, tc.stderr) {
+				t.Errorf("run() = %d, %q, want %d and %q", status, stderr, tc.status, tc.stderr)
+			}
+		})
+	}
+	status, _, stderr := runCommand(t, []string{"-code=false", "-reservations", filepath.Join(dir, "none.txt")}, fsys)
+	if status != 1 || !strings.Contains(stderr, "read the reservations") {
+		t.Errorf("run() with a missing file = %d, %q, want 1 and a read error", status, stderr)
+	}
+}
+
 func TestRunCode(t *testing.T) {
 	if testing.Short() {
 		t.Skip("loads packages with the go command")
 	}
 	dir := "testdata/module"
 	var out, errOut bytes.Buffer
-	status := run(context.Background(), nil, os.DirFS(dir), dir, &out, &errOut)
+	status := run(context.Background(), nil, os.DirFS(dir), dir, testEnv("http://unused.invalid"), &out, &errOut)
 	want := "internal/core/core.go:8: no-env: use of os.Getenv breaks the rule: Code does not read the environment.\n\tfix: Pass the value in.\narchcheck: 1 finding\n"
 	if status != 1 {
 		t.Errorf("run() status = %d, want 1", status)
@@ -169,7 +202,7 @@ func TestRunCanceled(t *testing.T) {
 	cancel()
 	fsys := fstest.MapFS{"architecture/model.yaml": {Data: []byte(fixtureModel)}}
 	var out, errOut bytes.Buffer
-	if status := run(ctx, nil, fsys, ".", &out, &errOut); status != 1 || !strings.Contains(errOut.String(), "context canceled") {
+	if status := run(ctx, nil, fsys, ".", testEnv("http://unused.invalid"), &out, &errOut); status != 1 || !strings.Contains(errOut.String(), "context canceled") {
 		t.Errorf("run() = %d, %q, want 1 and a canceled context", status, errOut.String())
 	}
 }

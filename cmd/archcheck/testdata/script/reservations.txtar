@@ -1,0 +1,77 @@
+# Without -reservations, the record checks do not change.
+exec archcheck -code=false
+stdout '^archcheck: no findings$'
+
+# With -reservations, a record without an annotated reservation tag is a finding.
+exitcode 1 archcheck -code=false -reservations missing.txt
+stderr '^architecture/designs/0002-layers.md: design-record: design number 2 has no reservation tag design/0002$'
+stderr '^archcheck: 1 finding$'
+
+# A record whose issue differs from the issue of its tag is a finding.
+exitcode 1 archcheck -code=false -reservations other.txt
+stderr '^architecture/designs/0001-start.md: design-record: the reservation tag design/0001 names issue 9, but the front matter states issue 1$'
+stderr '^archcheck: 1 finding$'
+
+# A tag for each record with the issue of the record meets the rule.
+exec archcheck -code=false -reservations good.txt
+stdout '^archcheck: no findings$'
+
+# A malformed file is an error.
+exitcode 1 archcheck -code=false -reservations bad.txt
+stderr '^archcheck: bad.txt: line 1: want the reference name, the object type and the subject, separated by tabs$'
+
+# A reserve usage error prints the usage of reserve and fails.
+exitcode 2 archcheck reserve -issue 1
+stderr '^usage: archcheck reserve -repo owner/name -issue N \[-designs dir\]$'
+
+-- go.mod --
+module example.com/m
+
+go 1.27
+-- architecture/model.yaml --
+version: 1
+module: example.com/m
+system:
+  id: m
+  name: M
+  description: A system.
+people: []
+external_systems: []
+relationships: []
+containers:
+  - id: app
+    name: App
+    technology: Go
+    description: The application.
+layers:
+  - id: core
+    directory: internal/core
+    description: The core.
+    uses: []
+    external: []
+components: []
+test_modules: []
+rules: []
+-- architecture/designs/0001-start.md --
+---
+design: 1
+issue: 1
+title: Start
+---
+-- architecture/designs/0002-layers.md --
+---
+design: 2
+issue: 2
+title: Layers
+---
+-- missing.txt --
+refs/tags/design/0001	tag	issue: 1
+refs/tags/design/0002	commit	issue: 2
+-- other.txt --
+refs/tags/design/0001	tag	issue: 9
+refs/tags/design/0002	tag	issue: 2
+-- good.txt --
+refs/tags/design/0001	tag	issue: 1
+refs/tags/design/0002	tag	issue: 2
+-- bad.txt --
+refs/tags/design/0001 tag issue: 1
