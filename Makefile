@@ -74,6 +74,7 @@ mutation: $(GREMLINS)
 fuzz:
 	$(GO) test -run='^$$' -fuzz='^FuzzParse$$' -fuzztime=15s ./internal/model
 	$(GO) test -run='^$$' -fuzz='^FuzzParseFrontMatter$$' -fuzztime=15s ./internal/record
+	$(GO) test -run='^$$' -fuzz='^FuzzParseReservations$$' -fuzztime=15s ./internal/record
 
 # BASE_REV is the git revision of the base, for example origin/dev or a commit.
 # Each new TestRegression test in a *_regression_test.go file must fail on the base revision.

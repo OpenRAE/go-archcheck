@@ -16,6 +16,9 @@ external_systems:
   - id: go-command
     name: Go command
     description: Lists the packages of the checked module for golang.org/x/tools/go/packages.
+  - id: github
+    name: GitHub REST API
+    description: Keeps the reservation tags of design numbers in the repository of the checked module.
 
 relationships:
   - from: developer
@@ -26,6 +29,10 @@ relationships:
     to: go-command
     description: Loads the packages of the checked module with
     technology: go list
+  - from: checker
+    to: github
+    description: Reserves design numbers with
+    technology: HTTPS
 
 containers:
   - id: checker
@@ -36,7 +43,7 @@ containers:
 layers:
   - id: command
     directory: cmd/archcheck
-    description: The archcheck main package, which reads the flags and prints the findings.
+    description: The archcheck main package, which reads the flags, prints the findings and reserves design numbers.
     uses: [code, record, model, finding]
     external: []
   - id: code
@@ -50,7 +57,7 @@ layers:
         reason: Reads the module path from the go.mod file.
   - id: record
     directory: internal/record
-    description: Checks the design records and the record rule for structural changes.
+    description: Checks the design records, their reservations and the record rule for structural changes.
     uses: [model, finding]
     external:
       - path: go.yaml.in/yaml/v3
@@ -84,7 +91,7 @@ layers:
 components:
   - id: command
     containers: [checker]
-    description: Reads the flags, runs the checks and prints the findings.
+    description: Reads the flags, runs the checks, prints the findings and reserves design numbers.
     packages: [github.com/OpenRAE/go-rae-archcheck/cmd/archcheck]
     depends_on: [code, record, model, finding]
   - id: code

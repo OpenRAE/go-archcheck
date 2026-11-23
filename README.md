@@ -5,6 +5,7 @@ The model states the layers of the module and the packages that each layer owns.
 It also states the layers and external modules that each layer can use, and rules for standard-library imports and symbols.
 
 The checker also requires a design record in the same change as each structural change to the model.
+`archcheck reserve` reserves each design number in GitHub, so two branches cannot use the same number.
 
 OpenRÆ repositories and the products that build on them pin a release of this checker.
 The repository holds only generic code and generic test fixtures.

@@ -2,14 +2,19 @@
 //
 // Run it from the module root:
 //
-//	archcheck [-model path] [-designs dir] [-base-model path] [-base-designs path] [-code=false]
+//	archcheck [-model path] [-designs dir] [-base-model path] [-base-designs path] [-reservations path] [-code=false]
+//	archcheck reserve -repo owner/name -issue N [-designs dir]
 //
 // It validates the model and its design records, and then checks the Go
 // packages of the module against the model. With -base-model and
 // -base-designs, it also requires a new design record when the structure of
 // the model changed since the base revision. -base-designs names a file that
 // lists the record file names of the base revision, one on each line, as
-// "git ls-tree --name-only" prints them.
+// "git ls-tree --name-only" prints them. With -reservations, each record
+// needs a reservation tag for its number and its issue.
+//
+// The reserve command reserves the next free design number for an issue in
+// GitHub, with the token in GH_TOKEN, and prints it.
 //
 // The exit status is 0 with no findings, 1 with findings or an error, and 2
 // for a usage error.
@@ -37,24 +42,36 @@ import (
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	status := run(ctx, os.Args[1:], os.DirFS("."), ".", os.Stdout, os.Stderr)
+	env := environment{getenv: os.Getenv, api: gitHubAPI}
+	status := run(ctx, os.Args[1:], os.DirFS("."), ".", env, os.Stdout, os.Stderr)
 	stop()
 	os.Exit(status)
 }
 
 // options are the parsed command-line flags.
 type options struct {
-	model       string
-	designs     string
-	baseModel   string
-	baseDesigns string
-	code        bool
+	model        string
+	designs      string
+	baseModel    string
+	baseDesigns  string
+	reservations string
+	code         bool
+}
+
+// environment is the input of the command from the process, other than the
+// arguments and the files.
+type environment struct {
+	getenv func(string) string
+	api    string // the base URL of the GitHub REST API
 }
 
 // run executes the command on the module in dir, which fsys also reads, and
 // returns its exit status. A failed write to the output streams has no
 // recovery, so the exit status alone reports it.
-func run(ctx context.Context, args []string, fsys fs.FS, dir string, stdout, stderr io.Writer) int {
+func run(ctx context.Context, args []string, fsys fs.FS, dir string, env environment, stdout, stderr io.Writer) int {
+	if len(args) > 0 && args[0] == "reserve" {
+		return runReserve(ctx, args[1:], fsys, env, stdout, stderr)
+	}
 	opts, ok := parse(args, stderr)
 	if !ok {
 		return 2
@@ -83,12 +100,14 @@ func parse(args []string, stderr io.Writer) (options, bool) {
 	flags.StringVar(&opts.designs, "designs", "architecture/designs", "the directory of the design records")
 	flags.StringVar(&opts.baseModel, "base-model", "", "the path of the model at the base revision")
 	flags.StringVar(&opts.baseDesigns, "base-designs", "", "a file that lists the design record names at the base revision")
+	flags.StringVar(&opts.reservations, "reservations", "", "a file that lists the reservation tags of design numbers")
 	flags.BoolVar(&opts.code, "code", true, "check the Go packages of the module")
 	if err := flags.Parse(args); err != nil {
 		return options{}, false
 	}
 	if flags.NArg() != 0 || (opts.baseModel == "") != (opts.baseDesigns == "") {
-		_, _ = fmt.Fprintln(stderr, "usage: archcheck [-model path] [-designs dir] [-base-model path -base-designs path] [-code=false]")
+		_, _ = fmt.Fprintln(stderr, "usage: archcheck [-model path] [-designs dir] [-base-model path -base-designs path] [-reservations path] [-code=false]")
+		_, _ = fmt.Fprintln(stderr, "       "+strings.TrimPrefix(reserveUsage, "usage: "))
 		return options{}, false
 	}
 	return opts, true
@@ -105,7 +124,7 @@ func check(ctx context.Context, opts options, fsys fs.FS, dir string) ([]finding
 	if m != nil {
 		findings = append(findings, model.Validate(m, opts.model)...)
 	}
-	recordFindings, err := record.Check(fsys, opts.designs)
+	recordFindings, err := checkRecords(fsys, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -167,6 +186,23 @@ func baseNames(listing []byte) []string {
 		}
 	}
 	return names
+}
+
+// checkRecords returns the findings of the design records. With
+// -reservations, it reads the reservations file by its operating system path
+// and checks the reservation of each record.
+func checkRecords(fsys fs.FS, opts options) ([]finding.Finding, error) {
+	var reservations map[int]int
+	if opts.reservations != "" {
+		data, err := os.ReadFile(opts.reservations)
+		if err != nil {
+			return nil, fmt.Errorf("read the reservations: %w", err)
+		}
+		if reservations, err = record.ParseReservations(data); err != nil {
+			return nil, fmt.Errorf("%s: %w", opts.reservations, err)
+		}
+	}
+	return record.Check(fsys, opts.designs, reservations)
 }
 
 // readModel reads and parses the model. It returns no model, and the
