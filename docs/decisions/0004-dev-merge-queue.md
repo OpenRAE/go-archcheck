@@ -13,8 +13,8 @@ A required check reports on a merge group only when its producer runs on the `me
 Ordinary pull requests to `dev` merge through the GitHub merge queue.
 `main` stays outside the queue, keeps strict status checks, and the maintainer merges into `main`.
 
-The `/implement` and `/quickfix` readiness step adds a ready pull request to the queue.
-Agents have maintainer authorization for this step on `dev` only.
+The maintainer's private readiness automation adds a ready pull request to the queue.
+It has maintainer authorization for this step on `dev` only.
 
 `dev` does not require strict status checks, because the queue tests each merge group against the latest `dev`.
 The queue builds up to five merge groups at the same time and merges up to five pull requests together.
@@ -46,10 +46,11 @@ The check fails in these conditions:
 - `main` has a merge queue, no strict status checks, or a changed set of required checks.
 
 The job condition of `SonarCloud` skips pull requests from other repositories, which get no token.
-The condition is true on each merge group, so the queue always gets a real result.
+The upstream condition of [0006](0006-optional-maintainer-workflows.md) also applies.
+Each condition is true on each upstream merge group, so the queue always gets a real result.
 
 The built-in GitHub token cannot read classic branch protection, so CI does not compare the live settings.
-After a change to the branch rules, an operator runs `python scripts/check_config.py --live`.
+After a change to the branch rules, an operator runs `python scripts/check_config.py --live OpenRAE/go-rae-archcheck`.
 That command reads the classic protection and the active rulesets with the GitHub CLI, and fails when they differ from the baseline.
 
 ## Consequences

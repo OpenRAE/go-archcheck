@@ -18,7 +18,7 @@ Contributions are welcome when they keep the checker generic, tested and documen
 
 ## Check a change
 
-`make ci-check` runs every check that CI runs: lint, security, tests, mutation testing, fuzzing, regression proof, the self-check, prose and the Ground Control checks.
+`make ci-check` runs every check that CI runs: lint, security, tests, mutation testing, fuzzing, regression proof, the self-check, prose and the configuration checks.
 `make hygiene` runs the file hygiene, workflow and secret hooks on every file.
 Run `make help` for the individual checks.
 
@@ -42,20 +42,7 @@ CI must pass before a merge.
 Release Please makes each release from the Conventional Commit history on `main`.
 It writes the version and `CHANGELOG.md`, so do not edit them in a pull request.
 
-## Use Ground Control
-
-The optional Ground Control workflow uses `.ground-control.yaml` for this repository.
-It targets `dev` and uses the existing Make checks and pre-commit hooks.
-The `.mcp.json` file starts the installed `grndctl mcp` server.
-
-1. Install Ground Control through your approved setup.
-2. Set up the local `.env` file with the credentials for this repository.
-3. Restart your agent session to load the MCP server.
-4. Run `/implement` with the GitHub issue number.
-
-Keep `.env` and the local `.gc` artifacts out of Git.
-The issue thread holds the plan and review records.
-You review and merge the pull request after the checks pass.
+## Merge a pull request
 
 Pull requests to `dev` merge through the merge queue.
 The queue merges a pull request only when each required check passes on its merge group.
@@ -63,13 +50,16 @@ When the queue removes a pull request without a merge, the pull request gets the
 
 Decision record [0004](docs/decisions/0004-dev-merge-queue.md) states the queue settings and the policy check of the branch protection.
 
-After the merge, the `Ground Control Phase E` workflow records the outcome and closes the issue.
-The workflow downloads a checksum-verified `v1.12.1` archive from the private `autarchy-ai/Ground-Control` release.
-The lockfile in `.github/ground-control` pins that archive and each dependency.
+## Upstream jobs
 
-The repository secret `GROUND_CONTROL_READ_TOKEN` must hold a token with read-only contents access to that repository.
-
-CI also runs these Ground Control gates:
+These checks run only in `OpenRAE/go-rae-archcheck`, because they need its secrets or its maintainer:
 
 - The `SonarCloud` job analyzes the code and waits for the quality gate.
 - The `GitGuardian Security Checks` job scans the commits of each pull request and merge group for secrets.
+- The `maintainer-gate` job requires the maintainer as the author or an approver.
+
+A fork skips these checks and the other upstream jobs.
+Decision record [0006](docs/decisions/0006-optional-maintainer-workflows.md) lists each job.
+
+The `Ground Control Phase E` workflow is private maintainer automation.
+It runs only upstream, and contributors do not need it.

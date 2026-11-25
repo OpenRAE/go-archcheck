@@ -35,8 +35,9 @@ jobs:
         run: mise exec -- uv run --locked --no-build python scripts/check_pr_body.py
       - name: Run all checks
         env:
-          # A merge group has no pull request, so it gives its base commit.
-          BASE_REV: ${{ github.event.merge_group.base_sha || github.event.pull_request.base.sha }}
+          # A merge group has no pull request, so it gives its base commit. A push or a manual
+          # run already passed its pull request or merge group checks, so it compares with itself.
+          BASE_REV: ${{ github.event.merge_group.base_sha || github.event.pull_request.base.sha || github.sha }}
         run: make ci-check
       - name: Keep the coverage profile for SonarCloud
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -54,7 +55,8 @@ jobs:
   sonar:
     name: SonarCloud
     needs: check
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    # 1442018845 is the ID of OpenRAE/go-rae-archcheck. A fork has another ID, and a rename keeps it.
+    if: github.repository_id == '1442018845' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

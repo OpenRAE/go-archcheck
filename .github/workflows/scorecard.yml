@@ -14,6 +14,8 @@ permissions:
 jobs:
   scorecard:
     name: Scorecard
+    # 1442018845 is the ID of OpenRAE/go-rae-archcheck. A fork has another ID, and a rename keeps it.
+    if: github.repository_id == '1442018845'
     runs-on: ubuntu-latest
     permissions:
       contents: read

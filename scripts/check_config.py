@@ -2,7 +2,6 @@
 
 import argparse
 import json
-import os
 import re
 import subprocess
 from pathlib import Path
@@ -25,11 +24,25 @@ PRODUCERS = {
 # the GitGuardian context on main. No workflow in this repository produces them there.
 MAIN_CHECKS = (set(PRODUCERS) - {"maintainer-gate"}) | {"CodeQL"}
 ALWAYS = "always()"
-# A job condition must be true on each merge group, so the queue always gets a real result.
-# The SonarCloud job skips only pull requests from other repositories, which get no token.
+# A job that needs an upstream secret, the upstream maintainer or the private Ground Control
+# release runs only in OpenRAE/go-rae-archcheck. The guard uses the repository ID, because a
+# rename keeps the ID and each fork has another one. So a rename cannot skip an upstream check.
+UPSTREAM = "github.repository_id == '1442018845'"
+# A job condition must be true on each upstream merge group, so the queue always gets a real
+# result. The SonarCloud job also skips pull requests from other repositories, which get no token.
 JOB_CONDITIONS = {
-    "SonarCloud": "github.event_name != 'pull_request' || "
-    "github.event.pull_request.head.repo.full_name == github.repository",
+    "SonarCloud": f"{UPSTREAM} && (github.event_name != 'pull_request' || "
+    "github.event.pull_request.head.repo.full_name == github.repository)",
+    "GitGuardian Security Checks": UPSTREAM,
+    "maintainer-gate": UPSTREAM,
+}
+# The upstream jobs that no branch requires, and the exact condition of each one.
+UPSTREAM_JOBS = {
+    ("ground-control-phase-e.yml", "finalize"): f"{UPSTREAM} && (github.event_name == 'workflow_dispatch' "
+    "|| github.event.pull_request.merged == true)",
+    ("release-please.yml", "release-please"): UPSTREAM,
+    ("scorecard.yml", "scorecard"): UPSTREAM,
+    ("sync-main-to-dev.yml", "backmerge"): UPSTREAM,
 }
 BASELINE = Path(".github/branch-protection-baseline.json")
 MERGE_METHODS = {"merge", "squash", "rebase"}
@@ -80,12 +93,21 @@ def check_producers(root: Path, contexts: set[str], branch: str) -> None:
                 )
         job = document["jobs"][job_id]
         assert job.get("name", job_id) == context, f"Producer must report {context}"
-        allowed = {ALWAYS, JOB_CONDITIONS.get(context, ALWAYS)}
-        assert job.get("if", ALWAYS) in allowed, f"{context} must not skip its check"
+        assert job.get("if", ALWAYS) == JOB_CONDITIONS.get(context, ALWAYS), f"{context} must not skip its check"
         assert not job.get("continue-on-error"), f"{context} must block on failure"
         assert not any(step.get("continue-on-error") for step in job["steps"]), (
             f"{context} steps must block on failure"
         )
+
+
+def check_upstream_jobs(root: Path) -> None:
+    """Require the exact upstream condition on each upstream job that no branch requires."""
+    for (filename, job_id), condition in UPSTREAM_JOBS.items():
+        document = yaml.load(
+            (root / ".github/workflows" / filename).read_text(encoding="utf-8"),
+            Loader=UniqueKeysLoader,
+        )
+        assert document["jobs"][job_id].get("if") == condition, f"{filename} job {job_id} must run only upstream"
 
 
 def check_merge_methods(branch: str, methods: list[str] | None) -> None:
@@ -191,48 +213,26 @@ def read_branch_settings(repository: str) -> dict:
     return settings
 
 
-def main(*, live: bool = False) -> None:
-    """Check workflow policy offline, or also compare live settings when requested."""
-    paths = [ROOT / ".ground-control.yaml", *sorted((ROOT / ".github" / "workflows").glob("*.yml"))]
+def main(*, live: str | None = None) -> None:
+    """Check workflow policy offline, or also compare the live settings of the repository live."""
+    paths = sorted((ROOT / ".github" / "workflows").glob("*.yml"))
     for path in paths:
         with path.open(encoding="utf-8") as stream:
             yaml.load(stream, Loader=UniqueKeysLoader)
-    config = yaml.load((ROOT / ".ground-control.yaml").read_text(encoding="utf-8"), Loader=UniqueKeysLoader)
-    owner, repository = config["github_repo"].split("/", maxsplit=1)
-    assert config["project"] == repository
-    assert os.environ.get("GITHUB_REPOSITORY", config["github_repo"]) == config["github_repo"]
-    assert config["workflow"]["base_branch"] == "dev"
-    # OpenRAE projects use the raesystem SonarCloud organization, not the GitHub owner.
-    assert owner == "OpenRAE"
-    assert config["sonarcloud"]["organization"] == "raesystem"
-    assert config["sonarcloud"]["analysis_check"] == "SonarCloud"
-    properties = {}
-    for line in (ROOT / "sonar-project.properties").read_text(encoding="utf-8").splitlines():
-        if line and not line.startswith("#"):
-            key, value = line.split("=", maxsplit=1)
-            properties[key] = value
-    assert properties["sonar.projectKey"] == config["sonarcloud"]["project_key"]
-    assert properties["sonar.organization"] == config["sonarcloud"]["organization"]
-    assert (ROOT / config["rules"]["plan_rules"]).is_file()
-    title_workflow = yaml.load(
-        (ROOT / ".github/workflows/pr-title-lint.yml").read_text(encoding="utf-8"),
-        Loader=UniqueKeysLoader,
-    )
-    title_job = title_workflow["jobs"]["lint-title"]
-    assert title_job["env"]["TITLE_TYPES"].split() == config["workflow"]["pr_title"]["types"]
-    assert title_job["steps"][0]["with"]["requireScope"] is config["workflow"]["pr_title"]["require_scope"]
-    assert title_job["env"]["TITLE_SUBJECT_PATTERN"] == config["workflow"]["pr_title"]["subject_pattern"]
+    check_upstream_jobs(ROOT)
     baseline = json.loads((ROOT / BASELINE).read_text(encoding="utf-8"))
     check_branch_settings(ROOT, baseline)
     if live:
-        actual = read_branch_settings(config["github_repo"])
+        actual = read_branch_settings(live)
         check_branch_settings(ROOT, actual)
         assert actual == baseline, f"Live protection differs from {BASELINE}"
         print("Live GitHub protection matches the baseline")
-    print(f"Validated {len(paths)} YAML files, Ground Control paths and branch protection")
+    print(f"Validated {len(paths)} workflow files, the upstream jobs and branch protection")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--live", action="store_true", help="Compare live protection using authenticated gh CLI")
+    parser.add_argument(
+        "--live", metavar="OWNER/NAME", help="Compare the live protection of the repository using authenticated gh CLI"
+    )
     main(live=parser.parse_args().live)

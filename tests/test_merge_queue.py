@@ -75,7 +75,7 @@ class PolicyTest(unittest.TestCase):
     def test_live_check_compares_the_baseline_including_queue_limits(self):
         with patch.object(check_config, "read_branch_settings", return_value=settings()) as read, \
                 patch.object(sys, "stdout", io.StringIO()) as output:
-            check_config.main(live=True)
+            check_config.main(live=REPOSITORY)
         read.assert_called_once_with(REPOSITORY)
         self.assertIn("Live GitHub protection matches the baseline", output.getvalue())
         for change in (
@@ -86,7 +86,7 @@ class PolicyTest(unittest.TestCase):
             change(drift["branches"])
             with patch.object(check_config, "read_branch_settings", return_value=drift):
                 with self.assertRaisesRegex(AssertionError, "Live protection differs"):
-                    check_config.main(live=True)
+                    check_config.main(live=REPOSITORY)
 
     def test_each_required_producer_rejects_missing_triggers_and_nonblocking_jobs(self):
         for context, (filename, job_id) in check_config.PRODUCERS.items():
@@ -102,6 +102,8 @@ class PolicyTest(unittest.TestCase):
                 ("skip job", lambda value: value["jobs"][job_id].update({"if": "false"})),
                 ("skip merge group", lambda value: value["jobs"][job_id].update(
                     {"if": "github.event_name == 'pull_request'"})),
+                ("other repository", lambda value: value["jobs"][job_id].update(
+                    {"if": "github.repository_id == '1'"})),
                 ("allow failure", lambda value: value["jobs"][job_id].update({"continue-on-error": True})),
                 ("allow step failure", lambda value: value["jobs"][job_id]["steps"][0].update(
                     {"continue-on-error": True})),
@@ -116,6 +118,46 @@ class PolicyTest(unittest.TestCase):
                     path.write_text(yaml.safe_dump(value))
                     with self.assertRaises(AssertionError):
                         check_config.check_producers(root, {context}, "dev")
+
+
+    def test_each_guarded_producer_requires_its_exact_condition(self):
+        for context, condition in check_config.JOB_CONDITIONS.items():
+            self.assertTrue(condition.startswith(check_config.UPSTREAM))
+            filename, job_id = check_config.PRODUCERS[context]
+            original = yaml.safe_load((ROOT / ".github/workflows" / filename).read_text())
+            for name, value in (("no guard", None), ("always", "always()")):
+                with self.subTest(context=context, mutation=name), tempfile.TemporaryDirectory() as directory:
+                    root = Path(directory)
+                    path = root / ".github/workflows" / filename
+                    path.parent.mkdir(parents=True)
+                    mutated = copy.deepcopy(original)
+                    mutated["jobs"][job_id].pop("if", None)
+                    if value is not None:
+                        mutated["jobs"][job_id]["if"] = value
+                    path.write_text(yaml.safe_dump(mutated))
+                    with self.assertRaisesRegex(AssertionError, "must not skip its check"):
+                        check_config.check_producers(root, {context}, "dev")
+
+    def test_each_upstream_job_requires_its_exact_guard(self):
+        check_config.check_upstream_jobs(ROOT)
+        for (filename, job_id), condition in check_config.UPSTREAM_JOBS.items():
+            self.assertTrue(condition.startswith(check_config.UPSTREAM))
+            original = yaml.safe_load((ROOT / ".github/workflows" / filename).read_text())
+            for name, value in (("no guard", None), ("other repository", "github.repository_id == '1'"),
+                                ("always", "always()")):
+                with self.subTest(job=job_id, mutation=name), tempfile.TemporaryDirectory() as directory:
+                    root = Path(directory)
+                    for other in {f for f, _ in check_config.UPSTREAM_JOBS}:
+                        path = root / ".github/workflows" / other
+                        path.parent.mkdir(parents=True, exist_ok=True)
+                        path.write_text((ROOT / ".github/workflows" / other).read_text())
+                    mutated = copy.deepcopy(original)
+                    mutated["jobs"][job_id].pop("if", None)
+                    if value is not None:
+                        mutated["jobs"][job_id]["if"] = value
+                    (root / ".github/workflows" / filename).write_text(yaml.safe_dump(mutated))
+                    with self.assertRaisesRegex(AssertionError, "must run only upstream"):
+                        check_config.check_upstream_jobs(root)
 
 
 class LiveReaderTest(unittest.TestCase):
@@ -177,12 +219,12 @@ else:
         for failure in ("dev_protection", "dev_rules", "main_protection", "main_rules"):
             with self.subTest(api=failure), patch.dict(os.environ, {"FAIL_API": failure}):
                 with self.assertRaises(subprocess.CalledProcessError):
-                    check_config.main(live=True)
+                    check_config.main(live=REPOSITORY)
 
     def test_strict_ruleset_cannot_hide_behind_relaxed_classic_protection(self):
         with patch.dict(os.environ, {"RULE_MUTATION": "strict"}):
             with self.assertRaisesRegex(AssertionError, "dev must not require strict"):
-                check_config.main(live=True)
+                check_config.main(live=REPOSITORY)
 
     def test_ambiguous_or_malformed_rules_fail(self):
         for mutation in ("duplicate", "malformed"):
