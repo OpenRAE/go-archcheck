@@ -31,6 +31,8 @@ concurrency:
 jobs:
   backmerge:
     name: Open main -> dev back-merge PR
+    # 1442018845 is the ID of OpenRAE/go-rae-archcheck. A fork has another ID, and a rename keeps it.
+    if: github.repository_id == '1442018845'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

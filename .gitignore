@@ -1,6 +1,8 @@
 /.cache/
 /.venv/
 /.env
+# Each maintainer keeps a local MCP configuration.
+/.mcp.json
 /.gc/*
 !/.gc/plan_rules.md
 __pycache__/

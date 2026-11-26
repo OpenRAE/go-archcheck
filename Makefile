@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help tools hygiene lint security test mutation fuzz regression arch prose gc ci-check
+.PHONY: help tools hygiene lint security test mutation fuzz regression arch prose config ci-check
 
 MISE ?= mise
 GO = $(MISE) exec -- go
@@ -11,7 +11,7 @@ REGRESSIONTEST = .cache/bin/regressiontest
 GREMLINS = .cache/bin/gremlins
 
 help:
-	@echo 'Checks: make lint, make security, make test, make mutation, make fuzz, make regression, make arch, make prose, make gc, make hygiene'
+	@echo 'Checks: make lint, make security, make test, make mutation, make fuzz, make regression, make arch, make prose, make config, make hygiene'
 	@echo 'All checks, as CI runs them: make ci-check'
 
 tools:
@@ -94,11 +94,11 @@ arch:
 prose:
 	$(MISE) exec -- vale $$(git ls-files '*.md' ':!:**/testdata/**')
 
-# The Ground Control configuration check and the tests of the repository scripts.
-gc:
+# The configuration check and the tests of the repository scripts.
+config:
 	mkdir -p .cache
 	$(MISE) exec -- uv run --locked --no-build python scripts/check_config.py
 	$(MISE) exec -- uv run --locked --no-build coverage run --source=scripts -m unittest discover -s tests
 	$(MISE) exec -- uv run --locked --no-build coverage xml -o .cache/python-coverage.xml
 
-ci-check: lint security test mutation fuzz regression arch prose gc
+ci-check: lint security test mutation fuzz regression arch prose config
