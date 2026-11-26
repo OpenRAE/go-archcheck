@@ -82,13 +82,17 @@ regression: $(REGRESSIONTEST)
 	$(MISE) exec -- $(CURDIR)/$(REGRESSIONTEST) -base "$${BASE_REV:-origin/dev}"
 
 # The checker checks its own model, records and code. With a base revision, a structural change
-# of the model needs a new design record.
+# of the model needs a new design record. Each design record needs its reservation tag in origin.
+# The fetch makes the local design/NNNN tags the same as the tags in origin.
 arch:
-	@mkdir -p .cache; if [ -n "$$BASE_REV" ] && git cat-file -e "$$BASE_REV:architecture/model.yaml" 2>/dev/null; then \
+	@mkdir -p .cache
+	git fetch --quiet --prune origin '+refs/tags/design/*:refs/tags/design/*'
+	git for-each-ref --format='%(refname)%09%(objecttype)%09%(contents:subject)' refs/tags/design/ > .cache/reservations.txt
+	@if [ -n "$$BASE_REV" ] && git cat-file -e "$$BASE_REV:architecture/model.yaml" 2>/dev/null; then \
 		git show "$$BASE_REV:architecture/model.yaml" > .cache/base-model.yaml; \
 		git ls-tree --name-only "$$BASE_REV" architecture/designs/ > .cache/base-designs.txt; \
-		$(GO) run ./cmd/archcheck -base-model .cache/base-model.yaml -base-designs .cache/base-designs.txt; \
-	else $(GO) run ./cmd/archcheck; fi
+		$(GO) run ./cmd/archcheck -reservations .cache/reservations.txt -base-model .cache/base-model.yaml -base-designs .cache/base-designs.txt; \
+	else $(GO) run ./cmd/archcheck -reservations .cache/reservations.txt; fi
 
 # The documentation follows the ASD-STE100 rules of the Vale style.
 prose:
