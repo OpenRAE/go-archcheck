@@ -30,6 +30,7 @@ Run `make help` for the individual checks.
 - Test the command contract with the testscript files in `cmd/archcheck/testdata/script`, and give each new parser a fuzz target.
 - Name a regression test `TestRegression...` in a `*_regression_test.go` file. It must fail on the base revision.
 - Add a design record in `architecture/designs` for each structural change of `architecture/model.yaml`.
+- Reserve the number of each new design record with `archcheck reserve`. `make arch` fails on a record without its tag.
 - Use a standard or widely used library before custom code, and record the reason for custom code.
 - Write documentation in ASD-STE100 Simplified Technical English. Vale checks it.
 - Write each pull request title as a Conventional Commit, for example `fix: report a missing design record`.
