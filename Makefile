@@ -10,6 +10,17 @@ COVERAGE = .cache/bin/go-test-coverage
 REGRESSIONTEST = .cache/bin/regressiontest
 GREMLINS = .cache/bin/gremlins
 
+# The doc-tools release gives the STE checks, the DocTools Vale style and the documentation skill.
+# Change the version and the SHA-256 of the release archive together. The release SHA256SUMS file
+# gives the SHA-256.
+DOC_TOOLS_VERSION = 0.1.0
+DOC_TOOLS_SHA256 = 125104c0cc535698d1cc9bba3e57883bdf9d87db6da346ff583967c4ce42de6c
+DOC_TOOLS = .cache/doc-tools/$(DOC_TOOLS_VERSION)
+DOC_TOOLS_URL = https://github.com/OpenRAE/doc-tools/releases/download/v$(DOC_TOOLS_VERSION)/doc-tools-$(DOC_TOOLS_VERSION).tar.gz
+
+# CI checks all the Markdown files. For a local check, give the changed files in PROSE_PATHS.
+PROSE_PATHS ?= $(shell git ls-files '*.md' ':!:**/testdata/**')
+
 help:
 	@echo 'Checks: make lint, make security, make test, make mutation, make fuzz, make regression, make arch, make prose, make config, make hygiene'
 	@echo 'All checks, as CI runs them: make ci-check'
@@ -94,9 +105,24 @@ arch:
 		$(GO) run ./cmd/archcheck -reservations .cache/reservations.txt -base-model .cache/base-model.yaml -base-designs .cache/base-designs.txt; \
 	else $(GO) run ./cmd/archcheck -reservations .cache/reservations.txt; fi
 
-# The documentation follows the ASD-STE100 rules of the Vale style.
-prose:
-	$(MISE) exec -- vale $$(git ls-files '*.md' ':!:**/testdata/**')
+# The download stops before extraction when the SHA-256 is not the recorded value.
+# The ste-cli installer of the package verifies the ste-cli archive in the same way.
+$(DOC_TOOLS)/.verified:
+	rm -rf $(DOC_TOOLS) $(DOC_TOOLS).tar.gz
+	mkdir -p $(DOC_TOOLS)
+	curl --proto '=https' --fail --silent --show-error --location -o $(DOC_TOOLS).tar.gz $(DOC_TOOLS_URL)
+	echo '$(DOC_TOOLS_SHA256)  $(DOC_TOOLS).tar.gz' | sha256sum -c -
+	tar -xzf $(DOC_TOOLS).tar.gz -C $(DOC_TOOLS) --strip-components=1
+	bash $(DOC_TOOLS)/tools/install-ste.sh
+	rm -rf styles/DocTools
+	cp -R $(DOC_TOOLS)/vale/DocTools styles/DocTools
+	touch $@
+
+# The documentation follows ASD-STE100. Vale applies the STE and DocTools styles, and
+# ste-cli applies the doc-tools STE rules.
+prose: $(DOC_TOOLS)/.verified
+	$(MISE) exec -- vale $(PROSE_PATHS)
+	bash $(DOC_TOOLS)/tools/ste-lint.sh $(PROSE_PATHS)
 
 # The configuration check and the tests of the repository scripts.
 config:

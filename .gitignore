@@ -9,3 +9,5 @@ __pycache__/
 /.coverage
 # Phase E downloads the finalizer archive here before npm ci.
 /.github/ground-control/*.tgz
+# make prose copies the DocTools style from the verified doc-tools release.
+/styles/DocTools/
