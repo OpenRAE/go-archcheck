@@ -1,0 +1,14 @@
+{
+  "extraKnownMarketplaces": {
+    "openrae-doc-tools": {
+      "source": {
+        "source": "github",
+        "repo": "OpenRAE/doc-tools",
+        "ref": "v0.1.0"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "doc-tools@openrae-doc-tools": true
+  }
+}

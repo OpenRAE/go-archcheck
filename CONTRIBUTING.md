@@ -15,12 +15,17 @@ Contributions are welcome when they keep the checker generic, tested and documen
 1. Install [mise](https://mise.jdx.dev/getting-started.html) 2026.10.0 or newer.
 2. Run `make tools`.
 3. Run `mise exec -- uv run --locked --no-build pre-commit install` to install the hooks.
+4. To use the shared `documentation` skill in Claude Code, trust the repository and install the `doc-tools` plugin when Claude Code asks.
+   `.claude/settings.json` pins the doc-tools marketplace to the release that the `Makefile` uses.
+   For other agents, follow the [doc-tools installation guide](https://github.com/OpenRAE/doc-tools/blob/v0.1.0/docs/how-to-install.md).
 
 ## Check a change
 
 `make ci-check` runs every check that CI runs: lint, security, tests, mutation testing, fuzzing, regression proof, the self-check, prose and the configuration checks.
 `make hygiene` runs the file hygiene, workflow and secret hooks on every file.
 Run `make help` for the individual checks.
+
+To check only the changed documents, give their paths: `make prose PROSE_PATHS="README.md docs/model.md"`.
 
 ## Follow the standards
 
@@ -32,7 +37,8 @@ Run `make help` for the individual checks.
 - Add a design record in `architecture/designs` for each structural change of `architecture/model.yaml`.
 - Reserve the number of each new design record with `archcheck reserve`. `make arch` fails on a record without its tag.
 - Use a standard or widely used library before custom code, and record the reason for custom code.
-- Write documentation in ASD-STE100 Simplified Technical English. Vale checks it.
+- Write documentation in ASD-STE100 Simplified Technical English. `make prose` checks it with Vale and with the ste-cli checks of [doc-tools](https://github.com/OpenRAE/doc-tools).
+  The `Makefile` pins the doc-tools release and its SHA-256. A passing check does not prove full ASD-STE100 conformance.
 - Write each pull request title as a Conventional Commit, for example `fix: report a missing design record`.
 
 ## Open a pull request

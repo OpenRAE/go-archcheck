@@ -7,5 +7,5 @@ tokens:
   - '\betc\.'
   - '\be\.g\.'
   - '\bi\.e\.'
-  - '\b(?:obviously|simply|clearly|seamlessly|robustly)\b'
+  - '\b(?:clearly|seamlessly|robustly)\b'
   - '\bit (?:is|should be) (?:important|worth) (?:noting|noted)\b'
