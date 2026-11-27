@@ -1,5 +1,7 @@
 # go-rae-archcheck
 
+To get started and run a scenario, see [LilRÆ](https://github.com/openrae/lilrae).
+
 go-rae-archcheck checks a Go module against one architecture model.
 The model states the layers of the module and the packages that each layer owns.
 It also states the layers and external modules that each layer can use, and rules for standard-library imports and symbols.
