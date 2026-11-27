@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/OpenRAE/go-rae-archcheck/internal/finding"
+	"github.com/OpenRAE/go-archcheck/internal/finding"
 )
 
 func TestReservationFormat(t *testing.T) {

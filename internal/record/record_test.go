@@ -8,8 +8,8 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/OpenRAE/go-rae-archcheck/internal/finding"
-	"github.com/OpenRAE/go-rae-archcheck/internal/model"
+	"github.com/OpenRAE/go-archcheck/internal/finding"
+	"github.com/OpenRAE/go-archcheck/internal/model"
 )
 
 func record(design, issue int, title string) *fstest.MapFile {

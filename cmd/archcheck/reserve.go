@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/OpenRAE/go-rae-archcheck/internal/record"
+	"github.com/OpenRAE/go-archcheck/internal/record"
 )
 
 const (

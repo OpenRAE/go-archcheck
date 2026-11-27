@@ -3,7 +3,7 @@
   "packages": {
     ".": {
       "release-type": "go",
-      "package-name": "go-rae-archcheck",
+      "package-name": "go-archcheck",
       "include-component-in-tag": false
     }
   }

@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/OpenRAE/go-rae-archcheck/internal/finding"
-	"github.com/OpenRAE/go-rae-archcheck/internal/model"
+	"github.com/OpenRAE/go-archcheck/internal/finding"
+	"github.com/OpenRAE/go-archcheck/internal/model"
 )
 
 // testModel is a model with three layers, two components, test support and

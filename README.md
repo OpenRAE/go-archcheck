@@ -1,4 +1,4 @@
-# go-rae-archcheck
+# go-archcheck
 
 To get started and run a scenario, see [LilRÆ](https://github.com/openrae/lilrae).
 
@@ -9,7 +9,7 @@ Each structural change to the model needs a design record in the same change.
 ## Install and run
 
 ```sh
-go install github.com/OpenRAE/go-rae-archcheck/cmd/archcheck@VERSION
+go install github.com/OpenRAE/go-archcheck/cmd/archcheck@VERSION
 archcheck
 ```
 

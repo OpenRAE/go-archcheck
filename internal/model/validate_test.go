@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/OpenRAE/go-rae-archcheck/internal/finding"
+	"github.com/OpenRAE/go-archcheck/internal/finding"
 )
 
 func TestValidateValidModel(t *testing.T) {

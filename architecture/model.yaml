@@ -1,10 +1,10 @@
-# The architecture model of go-rae-archcheck, which the checker also checks.
+# The architecture model of go-archcheck, which the checker also checks.
 version: 1
-module: github.com/OpenRAE/go-rae-archcheck
+module: github.com/OpenRAE/go-archcheck
 
 system:
   id: archcheck
-  name: go-rae-archcheck
+  name: go-archcheck
   description: Checks a Go module against its architecture model and its design records.
 
 people:
@@ -92,36 +92,36 @@ components:
   - id: command
     containers: [checker]
     description: Reads the flags, runs the checks, prints the findings and reserves design numbers.
-    packages: [github.com/OpenRAE/go-rae-archcheck/cmd/archcheck]
+    packages: [github.com/OpenRAE/go-archcheck/cmd/archcheck]
     depends_on: [code, record, model, finding]
   - id: code
     containers: [checker]
     description: Loads the packages of a module and checks them against a model.
-    packages: [github.com/OpenRAE/go-rae-archcheck/internal/code]
+    packages: [github.com/OpenRAE/go-archcheck/internal/code]
     depends_on: [model, finding]
     modules: [golang.org/x/tools, golang.org/x/mod]
   - id: record
     containers: [checker]
     description: Checks the design records and the record rule for structural changes.
-    packages: [github.com/OpenRAE/go-rae-archcheck/internal/record]
+    packages: [github.com/OpenRAE/go-archcheck/internal/record]
     depends_on: [model, finding]
     modules: [go.yaml.in/yaml/v3]
   - id: model
     containers: [checker]
     description: Reads a model and checks its semantic rules.
-    packages: [github.com/OpenRAE/go-rae-archcheck/internal/model]
+    packages: [github.com/OpenRAE/go-archcheck/internal/model]
     depends_on: [schema, finding]
     modules: [go.yaml.in/yaml/v3, golang.org/x/mod]
   - id: schema
     containers: [checker]
     description: Validates a model against the JSON schema of the format.
-    packages: [github.com/OpenRAE/go-rae-archcheck/schema]
+    packages: [github.com/OpenRAE/go-archcheck/schema]
     depends_on: []
     modules: [github.com/santhosh-tekuri/jsonschema/v6, golang.org/x/text]
   - id: finding
     containers: [checker]
     description: The finding type that every check returns.
-    packages: [github.com/OpenRAE/go-rae-archcheck/internal/finding]
+    packages: [github.com/OpenRAE/go-archcheck/internal/finding]
     depends_on: []
 
 test_modules:

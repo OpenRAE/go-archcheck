@@ -17,7 +17,7 @@ from scripts import check_config
 
 
 ROOT = Path(__file__).resolve().parents[1]
-REPOSITORY = "OpenRAE/go-rae-archcheck"
+REPOSITORY = "OpenRAE/go-archcheck"
 
 
 def settings():

@@ -25,7 +25,7 @@ PRODUCERS = {
 MAIN_CHECKS = (set(PRODUCERS) - {"maintainer-gate"}) | {"CodeQL"}
 ALWAYS = "always()"
 # A job that needs an upstream secret, the upstream maintainer or the private Ground Control
-# release runs only in OpenRAE/go-rae-archcheck. The guard uses the repository ID, because a
+# release runs only in OpenRAE/go-archcheck. The guard uses the repository ID, because a
 # rename keeps the ID and each fork has another one. So a rename cannot skip an upstream check.
 UPSTREAM = "github.repository_id == '1442018845'"
 # A job condition must be true on each upstream merge group, so the queue always gets a real

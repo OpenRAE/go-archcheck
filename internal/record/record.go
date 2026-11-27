@@ -14,8 +14,8 @@ import (
 
 	"go.yaml.in/yaml/v3"
 
-	"github.com/OpenRAE/go-rae-archcheck/internal/finding"
-	"github.com/OpenRAE/go-rae-archcheck/internal/model"
+	"github.com/OpenRAE/go-archcheck/internal/finding"
+	"github.com/OpenRAE/go-archcheck/internal/model"
 )
 
 // namePattern matches the file name of a design record: a four-digit number,

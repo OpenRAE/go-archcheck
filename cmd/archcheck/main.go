@@ -34,10 +34,10 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/OpenRAE/go-rae-archcheck/internal/code"
-	"github.com/OpenRAE/go-rae-archcheck/internal/finding"
-	"github.com/OpenRAE/go-rae-archcheck/internal/model"
-	"github.com/OpenRAE/go-rae-archcheck/internal/record"
+	"github.com/OpenRAE/go-archcheck/internal/code"
+	"github.com/OpenRAE/go-archcheck/internal/finding"
+	"github.com/OpenRAE/go-archcheck/internal/model"
+	"github.com/OpenRAE/go-archcheck/internal/record"
 )
 
 func main() {

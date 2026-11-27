@@ -10,7 +10,7 @@ import (
 
 	"golang.org/x/mod/module"
 
-	"github.com/OpenRAE/go-rae-archcheck/internal/finding"
+	"github.com/OpenRAE/go-archcheck/internal/finding"
 )
 
 // Validate returns the defects of a model that meets the schema. It checks

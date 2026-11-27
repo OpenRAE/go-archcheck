@@ -1,6 +1,6 @@
-# Contribute to go-rae-archcheck
+# Contribute to go-archcheck
 
-go-rae-archcheck holds the architecture of the projects that use it, so its behavior must stay exact and predictable.
+go-archcheck holds the architecture of the projects that use it, so its behavior must stay exact and predictable.
 Contributions are welcome when they keep the checker generic, tested and documented.
 
 ## Choose the route
@@ -59,7 +59,7 @@ Decision record [0004](docs/decisions/0004-dev-merge-queue.md) states the queue 
 
 ## Upstream jobs
 
-These checks run only in `OpenRAE/go-rae-archcheck`, because they need its secrets or its maintainer:
+These checks run only in `OpenRAE/go-archcheck`, because they need its secrets or its maintainer:
 
 - The `SonarCloud` job analyzes the code and waits for the quality gate.
 - The `GitGuardian Security Checks` job scans the commits of each pull request and merge group for secrets.

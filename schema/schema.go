@@ -26,7 +26,7 @@ import (
 var modelSchema []byte
 
 // id is the identifier of the schema, as its $id states.
-const id = "https://github.com/OpenRAE/go-rae-archcheck/schema/model.schema.json"
+const id = "https://github.com/OpenRAE/go-archcheck/schema/model.schema.json"
 
 // A Violation is one value of a model that breaks the schema.
 type Violation struct {

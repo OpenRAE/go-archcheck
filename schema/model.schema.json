@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/OpenRAE/go-rae-archcheck/schema/model.schema.json",
+  "$id": "https://github.com/OpenRAE/go-archcheck/schema/model.schema.json",
   "title": "Architecture model, version 1",
-  "description": "The structure of an architecture model that go-rae-archcheck reads. A forbidden import, a forbidden symbol and an external entry each match the path itself. A pattern that ends in /... also matches every package below it, an external pattern never crosses into another module, and a match never extends a path segment. The checker adds the semantic rules that docs/model.md states.",
+  "description": "The structure of an architecture model that go-archcheck reads. A forbidden import, a forbidden symbol and an external entry each match the path itself. A pattern that ends in /... also matches every package below it, an external pattern never crosses into another module, and a match never extends a path segment. The checker adds the semantic rules that docs/model.md states.",
   "type": "object",
   "additionalProperties": false,
   "required": [

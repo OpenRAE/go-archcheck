@@ -37,7 +37,7 @@ permissions:
 jobs:
   finalize:
     # Only upstream has the release token and the private Ground Control release.
-    # 1442018845 is the ID of OpenRAE/go-rae-archcheck. A fork has another ID, and a rename keeps it.
+    # 1442018845 is the ID of OpenRAE/go-archcheck. A fork has another ID, and a rename keeps it.
     if: github.repository_id == '1442018845' && (github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true)
     runs-on: ubuntu-latest
     steps:

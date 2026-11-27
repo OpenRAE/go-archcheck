@@ -116,7 +116,7 @@ formatters:
   settings:
     goimports:
       local-prefixes:
-        - github.com/OpenRAE/go-rae-archcheck
+        - github.com/OpenRAE/go-archcheck
 
 issues:
   max-issues-per-linter: 0
