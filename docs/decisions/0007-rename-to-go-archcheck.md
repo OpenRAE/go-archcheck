@@ -29,4 +29,5 @@ The repository ID `1442018845` does not change, so the guards of the upstream jo
 The next release has the new module path.
 A user of that release installs `github.com/OpenRAE/go-archcheck/cmd/archcheck`.
 Release v1.0.0 keeps its module path, so a user of v1.0.0 keeps the old path.
+
 Design record [0005](../../architecture/designs/0005-rename-module.md) states the change to the model.
