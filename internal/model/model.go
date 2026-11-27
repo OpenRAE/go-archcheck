@@ -14,8 +14,8 @@ import (
 
 	"go.yaml.in/yaml/v3"
 
-	"github.com/OpenRAE/go-rae-archcheck/internal/finding"
-	"github.com/OpenRAE/go-rae-archcheck/schema"
+	"github.com/OpenRAE/go-archcheck/internal/finding"
+	"github.com/OpenRAE/go-archcheck/schema"
 )
 
 // Model is the architecture model of a Go module.

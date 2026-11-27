@@ -1,4 +1,4 @@
-module github.com/OpenRAE/go-rae-archcheck
+module github.com/OpenRAE/go-archcheck
 
 go 1.27.0
 

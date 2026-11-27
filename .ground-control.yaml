@@ -1,6 +1,6 @@
 schema_version: 1
-project: go-rae-archcheck
-github_repo: OpenRAE/go-rae-archcheck
+project: go-archcheck
+github_repo: OpenRAE/go-archcheck
 workflow:
   base_branch: dev
   test_command: make test

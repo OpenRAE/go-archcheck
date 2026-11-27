@@ -1,6 +1,6 @@
 // Module tools pins the Go tools of the repository, so the checker module
 // never depends on them.
-module github.com/OpenRAE/go-rae-archcheck/tools
+module github.com/OpenRAE/go-archcheck/tools
 
 go 1.27.4
 

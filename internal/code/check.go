@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/OpenRAE/go-rae-archcheck/internal/finding"
-	"github.com/OpenRAE/go-rae-archcheck/internal/model"
+	"github.com/OpenRAE/go-archcheck/internal/finding"
+	"github.com/OpenRAE/go-archcheck/internal/model"
 )
 
 // Check compares the code with the model. The findings about the model

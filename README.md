@@ -1,39 +1,37 @@
-# go-rae-archcheck
+# go-archcheck
 
-go-rae-archcheck checks a Go module against one architecture model.
-The model states the layers of the module and the packages that each layer owns.
-It also states the layers and external modules that each layer can use, and rules for standard-library imports and symbols.
+To get started and run a scenario, see [LilRÆ](https://github.com/openrae/lilrae).
 
-The checker also requires a design record in the same change as each structural change to the model.
-`archcheck reserve` reserves each design number in GitHub, so two branches cannot use the same number.
+`archcheck` checks a Go module against its architecture model, `architecture/model.yaml`.
+The model states the layers, the components, the external modules that each layer can use, and the forbidden imports and symbols.
+Each structural change to the model needs a design record in the same change.
 
-OpenRÆ repositories and the products that build on them pin a release of this checker.
-The repository holds only generic code and generic test fixtures.
-
-## Use
-
-Install a pinned release, then run the checker from the module root:
+## Install and run
 
 ```sh
-go install github.com/OpenRAE/go-rae-archcheck/cmd/archcheck@VERSION
+go install github.com/OpenRAE/go-archcheck/cmd/archcheck@VERSION
 archcheck
 ```
 
-[`docs/model.md`](docs/model.md) describes the model format, the checks and the command flags.
-[`docs/decisions`](docs/decisions/README.md) records the design decisions of the checker.
-This repository checks itself with its own model, `architecture/model.yaml`.
+Run the command from the module root.
+The exit status is 0 with no findings, 1 with findings or an error, and 2 for a usage error.
 
-## Status
+To reserve the next design number for an issue, so that two branches cannot use the same number:
 
-The first release is in development.
-[Issue 3](https://github.com/OpenRAE/go-rae-archcheck/issues/3) records the engineering checks and workflow setup.
-[Issue 9](https://github.com/OpenRAE/go-rae-archcheck/issues/9) adds mutation testing after the first Gremlins fork release.
+```sh
+GH_TOKEN=... archcheck reserve -repo owner/name -issue N
+```
+
+## Documentation
+
+- [Model format, checks and flags](docs/model.md)
+- [Design decisions](docs/decisions/README.md)
+- [The model of this repository](architecture/model.yaml)
 
 ## Contribute
 
-[`CONTRIBUTING.md`](CONTRIBUTING.md) describes the setup, the checks and the standards.
-Report a vulnerability as [`SECURITY.md`](SECURITY.md) states, and follow the [code of conduct](CODE_OF_CONDUCT.md).
+See [`CONTRIBUTING.md`](CONTRIBUTING.md), [`SECURITY.md`](SECURITY.md) and the [code of conduct](CODE_OF_CONDUCT.md).
 
 ## License
 
-MIT, as `LICENSE` states.
+[MIT](LICENSE)
