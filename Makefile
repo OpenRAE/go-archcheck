@@ -18,8 +18,10 @@ DOC_TOOLS_SHA256 = 125104c0cc535698d1cc9bba3e57883bdf9d87db6da346ff583967c4ce42d
 DOC_TOOLS = .cache/doc-tools/$(DOC_TOOLS_VERSION)
 DOC_TOOLS_URL = https://github.com/OpenRAE/doc-tools/releases/download/v$(DOC_TOOLS_VERSION)/doc-tools-$(DOC_TOOLS_VERSION).tar.gz
 
-# CI checks all the Markdown files. For a local check, give the changed files in PROSE_PATHS.
-PROSE_PATHS ?= $(shell git ls-files '*.md' ':!:**/testdata/**')
+# For a local check, give the changed files in PROSE_PATHS.
+ifeq ($(origin PROSE_PATHS),undefined)
+PROSE_INPUT = git ls-files -z -- '*.md' ':(glob,exclude)**/testdata/**' | xargs -0
+endif
 
 help:
 	@echo 'Checks: make lint, make security, make test, make mutation, make fuzz, make regression, make arch, make prose, make config, make hygiene'
@@ -120,9 +122,11 @@ $(DOC_TOOLS)/.verified:
 
 # The documentation follows ASD-STE100. Vale applies the STE and DocTools styles, and
 # ste-cli applies the doc-tools STE rules.
+prose: private SHELL := /bin/bash
+prose: private .SHELLFLAGS := -o pipefail -c
 prose: $(DOC_TOOLS)/.verified
-	$(MISE) exec -- vale $(PROSE_PATHS)
-	bash $(DOC_TOOLS)/tools/ste-lint.sh $(PROSE_PATHS)
+	$(PROSE_INPUT) $(MISE) exec -- vale -- $(PROSE_PATHS)
+	$(PROSE_INPUT) bash $(DOC_TOOLS)/tools/ste-lint.sh -- $(PROSE_PATHS)
 
 # The configuration check and the tests of the repository scripts.
 config:
