@@ -52,7 +52,18 @@ The checker loads every package of the module with its test files, through `gola
 - An import from another module needs that module in the component.
 - Each rule holds in its scope.
 
-The checker reports a Go file that it cannot read, such as a file that a build constraint excludes.
+The checker first loads the packages for the operating system and architecture of the run.
+A build constraint or a file name suffix can exclude a Go file for that target.
+For each excluded file, the checker does these steps:
+
+1. It finds the first port of `go tool dist list` in Go 1.27 that includes the file. It tries the first-class ports first.
+2. It loads the package of the file again for that port, with cgo off.
+3. It checks the files of that load that no earlier load read.
+
+Each excluded file causes one more load at most.
+
+The checker reports a Go file that it cannot read for any port.
+Examples are a file with the `ignore` build tag and a file of another port that uses cgo.
 
 ## Design records
 
