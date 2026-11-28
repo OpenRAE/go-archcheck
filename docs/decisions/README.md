@@ -13,12 +13,13 @@ Design records of the model of the checker live in `architecture/designs`.
 | [0005](0005-design-number-reservations.md) | Annotated tags in GitHub reserve design numbers. |
 | [0006](0006-optional-maintainer-workflows.md) | Forks and contributors need no maintainer services. |
 | [0007](0007-rename-to-go-archcheck.md) | The repository and the module are `go-archcheck`. |
+| [0008](0008-documentation-by-reader-need.md) | Each documentation page has a main reader need. |
 
 ## Module map
 
 The repository has one module, at the root path `.`.
-All seven records apply to that module.
+The records below apply to that module.
 
 | Path | Implementation files | Records |
 | --- | --- | --- |
-| `.` | [`architecture/model.yaml`](../../architecture/model.yaml), [`Makefile`](../../Makefile), [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml), [`scripts/check_config.py`](../../scripts/check_config.py), [`cmd/archcheck/reserve.go`](../../cmd/archcheck/reserve.go) | 0001, 0002, 0003, 0004, 0005, 0006, 0007 |
+| `.` | [`architecture/model.yaml`](../../architecture/model.yaml), [`Makefile`](../../Makefile), [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml), [`scripts/check_config.py`](../../scripts/check_config.py), [`cmd/archcheck/reserve.go`](../../cmd/archcheck/reserve.go) | 0001, 0002, 0003, 0004, 0005, 0006, 0007, 0008 |
